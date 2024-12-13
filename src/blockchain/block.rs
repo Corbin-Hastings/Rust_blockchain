@@ -7,20 +7,22 @@ use crate::blockchain::hashing::hash;
 pub struct Block{
     pub transactions: Vec<Transaction>,
     pub prev_hash: String,
-    pub hash: String,
     pub nonce: f64,
-    pub index: f64,
+    pub index: i64,
+    pub hash: String,
 }
 
 impl Block {
-    pub fn new(transactions:Vec<Transaction>,prev_hash:String,hash:String) -> Option<Block> {
-        Some(Block{
+    pub fn new(transactions:Vec<Transaction>,prev_hash:String,index:i64) -> Block {
+        let mut block = Block{
             transactions,
             prev_hash,
-            hash,
             nonce: 0.0,
-            index: 0.0,
-        })
+            index,
+            hash: "".to_string(),
+        };
+        block.hash = block.calculate_hash();
+        block
     }
 
     pub fn calculate_hash(&self)->String{
@@ -28,7 +30,7 @@ impl Block {
         let transactions = &self.transactions;
         let prev = &self.prev_hash;
         let index = self.index;
-        
+
         let hash_in = format!("{}{:?}{}{}",
             nonce,
             transactions,
@@ -45,7 +47,7 @@ impl Block {
             self.hash = self.calculate_hash();
         }
     }
-
+//i am not sure why this is the way it is. fixed above
 /*     pub fn calculate_hash(&self)->String{
         let hash_in = format!({:?}{}{}{},
             self.transactions,

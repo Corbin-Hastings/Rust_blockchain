@@ -7,11 +7,11 @@ pub struct Transaction {
 }
 
 impl Transaction{
-    pub fn new(sender:String, receiver:String, amount:f64)->Option<Transaction>{
-        Some(Transaction{
+    pub fn new(sender:String, receiver:String, amount:f64)->Transaction{
+        Transaction{
             sender,
             receiver,
             amount,
-        })
+        }
     }
 }
