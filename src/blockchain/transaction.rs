@@ -1,5 +1,5 @@
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug)]
 pub struct Transaction {
     pub sender: String,
     pub receiver: String,

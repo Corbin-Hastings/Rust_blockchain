@@ -1,5 +1,9 @@
+mod blockchain;
+
+use blockchain::chain::Blockchain;
+
+
+
 fn main() {
-    //Hello world. I am goofing with github at the moment
-    
-    println!("Hello, world!");
+
 }

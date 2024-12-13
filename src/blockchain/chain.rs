@@ -1,3 +1,6 @@
+use std::sync::Mutex;
+use crate::blockchain::transaction::Transaction;
+
 pub struct Blockchain {
     transaction_queue: Mutex<Vec<Transaction>>,
     difficulty: usize,
