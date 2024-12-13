@@ -4,16 +4,16 @@ use crate::blockchain::chain::Blockchain;
 use crate::blockchain::hashing::hash;
 
 #[derive(Debug)]
-pub struct Block{
-    pub transactions: Vec<Transaction>,
+pub struct Block<'a>{
+    pub transactions: Vec<&'a Transaction>,
     pub prev_hash: String,
     pub nonce: f64,
     pub index: i64,
     pub hash: String,
 }
 
-impl Block {
-    pub fn new(transactions:Vec<Transaction>,prev_hash:String,index:i64) -> Block {
+impl<'a> Block<'a> {
+    pub fn new(transactions:Vec<&'a Transaction>,prev_hash:String,index:i64) -> Block<'a> {
         let mut block = Block{
             transactions,
             prev_hash,
