@@ -1,121 +1,116 @@
 mod blockchain;
 mod miner;
-mod threads;
-use std::{io, thread::Thread};
-
-use core::num;
-use std::{sync::{mpsc, Mutex}, thread, time};
-
-use blockchain::{block::Block, chain::{self, Blockchain}, transaction::{self, Transaction}};
-use miner::{mine_multi};
+use std::{io, thread};
+use std::sync::Mutex;
+use blockchain::{block::Block, chain::Blockchain, transaction::Transaction};
+use miner::mine_multi;
 use std::sync::Arc;
-use rand::Rng;
+
+/// Main function docs
+/// 
+/// This main function is the starting point of the program
+/// it sets up all of the logic and takes in all of the user input
+/// in further itterations the idea would be to move some of these opperations
+/// there own files
+/// 
+/// Main opperations:
+/// 
+/// take in user input for the #of threads
+/// take in user input for the difficulty
+/// 
+/// initilization of the blockchain and blocks and example transations
+/// 
+/// sets up logic for spawning threads to mine the blocks.
+/// 
+/// this is my first time writing documentation, I am trying my best here
 
 
 
 fn main() {
 
-    let mut thread_input = String::new();
-    println!("how many threads do you want to use:");
-    io::stdin().read_line(&mut thread_input);
-    let threads: i32 = thread_input.trim().parse().expect("Please enter a number");
-    println!("loading up {} threads", threads );
+     
 
-    let mut diff_input = String::new();
-    println!("how hard do you want the hash to be (stay below 5):");
-    io::stdin().read_line(&mut diff_input);
-    let diff: i32 = diff_input.trim().parse().expect("Please enter a number");
-    println!("Diff set to: {} ", diff );
+       // Ask the user for the number of threads
+       println!("Enter the number of threads:");
+       let mut thread_input = String::new();
+       io::stdin().read_line(&mut thread_input).expect("Failed to read input");
+       let num_threads: usize = thread_input.trim().parse().expect("Please enter a valid number");
+   
+       // Ask the user for the difficulty setting
+       println!("Enter the difficulty setting:");
+       let mut diff_input = String::new();
+       io::stdin().read_line(&mut diff_input).expect("Failed to read input");
+       let difficulty: u32 = diff_input.trim().parse().expect("Please enter a valid number");
+   
+       let start_chain = Arc::new(Mutex::new(Blockchain::new(difficulty as usize)));
 
-    let mut block = Block::new(Vec::new(), 
-        "none".to_string(), 0);
-
-
-    let num_threads = threads as usize;
-
-    let mut handles = Vec::with_capacity(num_threads);
-
-    let start_chain = Arc::new(Mutex::new(Blockchain::new(diff as usize))); //creates chain at the begenning of program
-    let block_queue: Arc<Mutex<Vec<Block>>> = Arc::new(Mutex::new(vec![block.clone()]));
-
+    //setting up test transaction
+    {    let transaction1: Transaction = Transaction::new("Corsdafasbin".to_string(),
+    "My_graveteehheasfdee".to_string(), 14543200.00);
+    start_chain.lock().unwrap().transaction_queue.push(transaction1.clone());
+}
 
 
-    
-
-
-    let chain_clone = Arc::clone(&start_chain);
-    let queue_clone = Arc::clone(&block_queue);
-    let handle = thread::spawn(move || {
-        let num_threads = threads.clone();
-        for i in 0..10 {
-            let mut rng = rand::thread_rng();
-            let sender = rng.gen_range(0..num_threads);
-            let receiver = rng.gen_range(0..num_threads);
-            let amount = rng.gen_range(0..100);
-            let transaction = Transaction::new(sender, receiver, amount as f64);
-
-            chain_clone.lock().unwrap().add_transaction(transaction,&mut queue_clone.lock().unwrap());
-            println!("transaction added to queue");
-            thread::sleep(time::Duration::from_secs(3));
-        }
-    });
-    handles.push(handle);
 
     //init first block to hash out trasaction queue
     let mut block = Block::new(Vec::new(), 
-        "prev_hash".to_string(), 0);
-
+        "".to_string(), 0);
     //push queue to the block to get calculated and recorded
     for i in start_chain.lock().unwrap().transaction_queue.clone() {
         block.transactions.push(i);
     }
-/*     println!("chain before{:?}",start_chain);
-    println!("block before mining: {:?}",block);
- */
-    ////////////////////////////////////////////////////////////////////////////////////////
+    //init transaction 2 and block 2
+    {    let transaction2: Transaction = Transaction::new("testing123".to_string(),
+    "paying".to_string(), 1400.00);
+    start_chain.lock().unwrap().transaction_queue.push(transaction2.clone());
+}
+    let mut block1 = Block::new(Vec::new(), 
+    "".to_string(), 0);
 
-    
+    for i in start_chain.lock().unwrap().transaction_queue.clone() {
+        block1.transactions.push(i);
+    }
+    //init block_queue with our 2 premade blocks
+    let block_queue:Vec<&mut Block> = vec![&mut block,&mut block1];
+
+    //loop to get through the block queue
+    for b in block_queue{
+    let mut handles = Vec::with_capacity(num_threads);
 
     let done =  Arc::new(Mutex::new(false));
-
+        //setting last hash if the block is not first
+    if start_chain.lock().unwrap().chain.len()>0 {
+        b.prev_hash = start_chain.lock().unwrap().chain.last().unwrap().hash.clone();
+    }
+    //loop for spawning threads
     for i in 0..num_threads {
-        let block_q = Arc::clone(&block_queue);
+       // let block_q = Arc::clone(&block_queue);
         let done_clone = Arc::clone(&done);
-        let done_clone_reset = Arc::clone(&done);
         let chain_clone = Arc::clone(&start_chain);
-        let mut block_clone = block.clone();
+        let mut block_clone = b.clone();
 
-        //let (tx, rx) = mpsc::channel();
         
+        //spawn threads
         let handle = thread::spawn(move || {
-            println!("miner {} starting",i);
-            loop {
-            if block_q.lock().unwrap().is_empty() {
-                thread::sleep(time::Duration::from_secs(2));
-                println!("no blocks to mine, sleeping for 2 sec")
-            }else{
-            *done_clone_reset.lock().unwrap() = false;
-            let block = &mut block_q.lock().unwrap().first().unwrap().clone();
-            block_q.lock().unwrap().pop();
+            
+            let block = &mut block_clone;
             let diff = chain_clone.lock().unwrap().difficulty;
           
-            
-            let mined_block= mine_multi(block, diff, i as i128, num_threads as i128,&mut done_clone.lock().unwrap());
+            println!("miner {} starting",i);
+            let mined_block= mine_multi(block, diff, i as i128, num_threads as i128,done_clone);
             match mined_block {
-                Some(block)=>{
-                    chain_clone.lock().unwrap().chain.push(block);
-                    println!("miner {} mined and retured the block",i);
-                    thread::sleep(time::Duration::from_secs(3));},
+                Some(block)=>{println!("miner {} mined and retured the block with nonce {} and hash {}",i,block.nonce ,block.hash );
+                chain_clone.lock().unwrap().to_chain(block);},
                 None=> {println!("Thread {} lost and is going to close",i);}
-            } 
-            }}
+            }
+            
+            
         });
 
         handles.push(handle);
     }
-
+//wait for all threads to finish
     for handle in handles {
         handle.join().unwrap();
-    }
-    println!("chain after{:?}",start_chain);
+    }}
 }
