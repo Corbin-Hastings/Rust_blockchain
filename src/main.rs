@@ -11,7 +11,7 @@ use std::sync::Arc;
 
 fn main() {
 
-    let mut start_chain = Arc::new(Mutex::new(Blockchain::new(5))); //creates chain at the begenning of program
+    let mut start_chain = Arc::new(Mutex::new(Blockchain::new(1))); //creates chain at the begenning of program
 
    
     //setting up test transactions
@@ -35,13 +35,13 @@ fn main() {
     //init first block to hash out trasaction queue
     let mut block = Arc::new(Mutex::new(Block::new(Vec::new(), 
         "prev_hash".to_string(), 0)));
-/*     //push queue to the block to get calculated and recorded
-    for i in chain.transaction_queue.get_mut().unwrap() {
-        block.transactions.push(i);
+    //push queue to the block to get calculated and recorded
+    for i in start_chain.lock().unwrap().transaction_queue.clone() {
+        block.lock().unwrap().transactions.push(i);
     }
-
+    println!("chain before{:?}",start_chain);
     println!("block before mining: {:?}",block);
-
+/* 
     //calling mine opperation to mine block. this is still all mostly testing
     block.mine_block(chain.difficulty);//5 takes 5 mins 6 takes 10ish on one thread 
 
@@ -58,7 +58,7 @@ fn main() {
 
     let mut handles = Vec::with_capacity(num_threads);
 
-    let done =  Arc::new(Mutex::new(false));
+    let mut done =  Arc::new(Mutex::new(false));
 
     for i in 0..num_threads {
         let done_clone = Arc::clone(&done);
@@ -66,11 +66,11 @@ fn main() {
         let block_clone = Arc::clone(&block);
         let handle = thread::spawn(move || {
             println!("miner {} starting",i);
-            let mined_block= mine_multi(&mut &block_clone.lock().unwrap(), chain_clone.lock().unwrap().difficulty, i as i128, num_threads as i128,done_clone);
+            let mined_block= mine_multi(&mut block_clone.lock().unwrap().clone(), chain_clone.lock().unwrap().difficulty, i as i128, num_threads as i128,done_clone);
             match mined_block {
                 Some(block)=>{chain_clone.lock().unwrap().chain.push(block);
                     println!("miner {} mined and retured the block",i);},
-                None=> println!("Thread {} lost and is going to close",i)
+                None=> {println!("Thread {} lost and is going to close",i);}
             }
             
             
@@ -83,5 +83,5 @@ fn main() {
     for handle in handles {
         handle.join().unwrap();
     }
-
+    println!("chain after{:?}",start_chain);
 }

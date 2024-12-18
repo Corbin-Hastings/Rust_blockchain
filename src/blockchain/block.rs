@@ -6,16 +6,16 @@ use crate::blockchain::chain::Blockchain;
 use crate::blockchain::hashing::hash;
 
 #[derive(Debug,Clone)]
-pub struct Block<'a>{
-    pub transactions: Vec<&'a Transaction>,
+pub struct Block{
+    pub transactions: Vec<Transaction>,
     pub prev_hash: String,
     pub nonce: f64,
     pub index: i64,
     pub hash: String,
 }
 
-impl<'a> Block<'a> {
-    pub fn new(transactions:Vec<&'a Transaction>,prev_hash:String,index:i64) -> Block<'a> {
+impl Block {
+    pub fn new(transactions:Vec<Transaction>,prev_hash:String,index:i64) -> Block {
         let mut block = Block{
             transactions,
             prev_hash,
@@ -46,8 +46,9 @@ impl<'a> Block<'a> {
         self.nonce = (0+miner_id)as f64;
         let mut itter:i128 = 1;
         let prefix = "0".repeat(difficulty);//cite chatgpt
+        let mut done_val = done.lock().unwrap();
         while !self.hash.starts_with(&prefix){
-            let done_val = done.lock().unwrap();
+            //let done_val = done.lock().unwrap();
             if *done_val==true {
                 return Option::None;
             }
@@ -56,6 +57,7 @@ impl<'a> Block<'a> {
             itter+=1;
         }
         println!("Miner {} has mined the block",miner_id);
+        *done_val = true;
         Option::Some(self.clone())
     }
 //i am not sure why this is the way it is. fixed above
