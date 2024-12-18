@@ -12,8 +12,8 @@ pub struct miner{
     block.mine_block(diff,0,1);
 }
 
-pub fn mine_multi(block:&mut Block,diff:usize,id:i128,total:i128) {
-    block.mine_block(diff,id,total);
+pub fn mine_multi<'a>(block:&'a mut Block<'a>,diff:usize,id:i128,total:i128)->Block<'a> {
+    block.mine_block(diff,id,total)
 }
 /* impl miner {
     pub fn mine_single(block:&mut Block,diff:usize) {

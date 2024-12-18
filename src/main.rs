@@ -1,7 +1,10 @@
 mod blockchain;
 mod miner;
 
+use std::thread;
+
 use blockchain::{block::Block, chain::Blockchain, transaction::{self, Transaction}};
+use miner::{mine_single,mine_multi};
 
 
 
@@ -45,5 +48,26 @@ fn main() {
     chain.chain.get_mut().unwrap().push(block);
 
     println!("{:?}",chain);
+
+    ////////////////////////////////////////////////////////////////////////////////////////
+    //mine_single(&mut block, diff);
+    let mut  num_threads = 4;
+
+    let mut handles = Vec::with_capacity(num_threads);
+
+    for i in 0..num_threads {
+        let handle = thread::spawn(move || {
+            println!("miner {} starting",i);
+            chain.chain.get_mut().unwrap().push(mine_multi(&mut block.clone(), chain.difficulty, i as i128, num_threads as i128));
+            println!("miner {} done!",1);
+        });
+
+        handles.push(handle);
+    }
+
+
+    for handle in handles {
+        handle.join().unwrap();
+    }
 
 }
