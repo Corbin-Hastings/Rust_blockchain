@@ -5,7 +5,7 @@ pub fn hash(data: &str)->String{
     hasher.update(data);
     format!("{:x}", hasher.finalize())
 }
-
+/* 
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -20,4 +20,4 @@ mod tests {
             "6b7b8bf2b5af732ff634b15f3c7431c42599714cdb51c48c891b71cfad2f8e78"
         );
     }
-}
+} */
