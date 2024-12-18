@@ -48,9 +48,9 @@ impl<'a> Block<'a> {
         }
     }
 //i am not sure why this is the way it is. fixed above
-/*     pub fn calculate_hash(&self)->String{
+   /*  pub fn calculate_hash(&self)->String{
         let hash_in = format!({:?}{}{}{},
-            self.transactions,
+            &self.transactions,
             self.prev_hash,
             self.nonce,
             self.index

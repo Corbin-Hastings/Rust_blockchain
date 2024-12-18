@@ -1,4 +1,5 @@
 mod blockchain;
+mod miner;
 
 use blockchain::{block::Block, chain::Blockchain, transaction::{self, Transaction}};
 
@@ -36,7 +37,7 @@ fn main() {
     println!("block before mining: {:?}",block);
 
     //calling mine opperation to mine block. this is still all mostly testing
-    block.mine_block(2);//5 takes 5 mins 6 takes 10ish
+    block.mine_block(chain.difficulty);//5 takes 5 mins 6 takes 10ish on one thread 
 
     println!("block after mining: {:?}",block);
 
