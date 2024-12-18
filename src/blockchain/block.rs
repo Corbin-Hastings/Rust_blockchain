@@ -6,6 +6,8 @@ use crate::blockchain::transaction::Transaction;
 use crate::blockchain::chain::Blockchain;
 use crate::blockchain::hashing::hash;
 
+use super::transaction;
+
 #[derive(Debug,Clone)]
 pub struct Block{
     pub transactions: Vec<Transaction>,
@@ -43,34 +45,23 @@ impl Block {
         hash(&hash_in)
     }
 
-    pub fn mine_block(&mut self,difficulty:usize,miner_id:i128,total_miners:i128,done:Arc<Mutex<bool>>)->Option<Block>{
+    pub fn mine_block(&mut self,difficulty:usize,miner_id:i128,total_miners:i128,done:&mut bool)->Option<Block>{
         self.nonce = (0+miner_id)as f64;
         let mut itter:i128 = 1;
         let prefix = "0".repeat(difficulty);//cite chatgpt
-        //let mut done_val = done.lock().unwrap();
+    
         while !self.hash.starts_with(&prefix){
-            //let done_val = done.lock().unwrap();
-            if *done.lock().unwrap()==true {
+
+            if *done==true {
                 return Option::None;
             }
             self.nonce = ((total_miners*itter)+miner_id) as f64;
             self.hash = self.calculate_hash();
             itter+=1;
-            //println!("Miner {}  is on itter {}",miner_id,itter);
-            //thread::sleep(time::Duration::from_secs(2));
         }
         println!("Miner {} has mined the block",miner_id);
-        *done.lock().unwrap() = true;
+        *done = true;
         Option::Some(self.clone())
     }
-//i am not sure why this is the way it is. fixed above
-   /*  pub fn calculate_hash(&self)->String{
-        let hash_in = format!({:?}{}{}{},
-            &self.transactions,
-            self.prev_hash,
-            self.nonce,
-            self.index
-        );
-        hash(&hash_in)
-    } */
+
 }
