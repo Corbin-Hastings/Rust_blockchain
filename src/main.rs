@@ -11,12 +11,12 @@ use std::sync::Arc;
 
 fn main() {
 
-    let mut start_chain = Arc::new(Mutex::new(Blockchain::new(1))); //creates chain at the begenning of program
+    let mut start_chain = Arc::new(Mutex::new(Blockchain::new(5))); //creates chain at the begenning of program
 
    
     //setting up test transactions
-    {    let transaction1 = Transaction::new("slkdfs".to_string(),
-    "dsfg".to_string(), 12.3);
+    {    let transaction1: Transaction = Transaction::new("sadfasdfasdf".to_string(),
+    "gfgdfgsdfvdfge".to_string(), 34.343);
    let transaction2 = Transaction::new("dsfsadf".to_string(),
     "dsfg".to_string(), 12.3);
    let transaction3 = Transaction::new("dgsfdsfg".to_string(),
@@ -65,8 +65,10 @@ fn main() {
         let chain_clone = Arc::clone(&start_chain);
         let block_clone = Arc::clone(&block);
         let handle = thread::spawn(move || {
+            let bloc = &mut block_clone.lock().unwrap().clone();
+          
             println!("miner {} starting",i);
-            let mined_block= mine_multi(&mut block_clone.lock().unwrap().clone(), chain_clone.lock().unwrap().difficulty, i as i128, num_threads as i128,done_clone);
+            let mined_block= mine_multi(bloc, chain_clone.lock().unwrap().difficulty, i as i128, num_threads as i128,done_clone);
             match mined_block {
                 Some(block)=>{chain_clone.lock().unwrap().chain.push(block);
                     println!("miner {} mined and retured the block",i);},

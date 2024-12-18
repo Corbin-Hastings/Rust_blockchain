@@ -1,4 +1,5 @@
 use std::sync::{Arc, Mutex};
+use std::{thread,time};
 
 //use crate::serde::{Serialize, Deserialize};
 use crate::blockchain::transaction::Transaction;
@@ -55,6 +56,8 @@ impl Block {
             self.nonce = ((total_miners*itter)+miner_id) as f64;
             self.hash = self.calculate_hash();
             itter+=1;
+            println!("Miner {}  is on itter {}",miner_id,itter);
+            thread::sleep(time::Duration::from_secs(2));
         }
         println!("Miner {} has mined the block",miner_id);
         *done_val = true;
