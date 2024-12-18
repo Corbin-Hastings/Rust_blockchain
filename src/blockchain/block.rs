@@ -1,3 +1,5 @@
+use std::sync::{Arc, Mutex};
+
 //use crate::serde::{Serialize, Deserialize};
 use crate::blockchain::transaction::Transaction;
 use crate::blockchain::chain::Blockchain;
@@ -40,17 +42,21 @@ impl<'a> Block<'a> {
         hash(&hash_in)
     }
 
-    pub fn mine_block(&mut self,difficulty:usize,miner_id:i128,total_miners:i128)->Block{
-        let mut local_nonce:i128 = 0+miner_id;
+    pub fn mine_block(&mut self,difficulty:usize,miner_id:i128,total_miners:i128,done:Arc<Mutex<bool>>)->Option<Block>{
+        self.nonce = (0+miner_id)as f64;
         let mut itter:i128 = 1;
         let prefix = "0".repeat(difficulty);//cite chatgpt
         while !self.hash.starts_with(&prefix){
-            local_nonce = ((total_miners*itter)+miner_id);
+            let done_val = done.lock().unwrap();
+            if *done_val==true {
+                return Option::None;
+            }
+            self.nonce = ((total_miners*itter)+miner_id) as f64;
             self.hash = self.calculate_hash();
             itter+=1;
         }
         println!("Miner {} has mined the block",miner_id);
-        self.clone()
+        Option::Some(self.clone())
     }
 //i am not sure why this is the way it is. fixed above
    /*  pub fn calculate_hash(&self)->String{

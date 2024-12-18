@@ -1,5 +1,5 @@
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub struct Transaction {
     pub sender: String,
     pub receiver: String,
