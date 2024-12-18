@@ -3,7 +3,7 @@ use crate::blockchain::transaction::Transaction;
 use crate::blockchain::chain::Blockchain;
 use crate::blockchain::hashing::hash;
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub struct Block<'a>{
     pub transactions: Vec<&'a Transaction>,
     pub prev_hash: String,
@@ -40,12 +40,17 @@ impl<'a> Block<'a> {
         hash(&hash_in)
     }
 
-    pub fn mine_block(&mut self,difficulty:usize){
+    pub fn mine_block(&mut self,difficulty:usize,miner_id:i128,total_miners:i128)->Block{
+        let mut local_nonce:i128 = 0+miner_id;
+        let mut itter:i128 = 1;
         let prefix = "0".repeat(difficulty);//cite chatgpt
         while !self.hash.starts_with(&prefix){
-            self.nonce +=1.0;
+            local_nonce = ((total_miners*itter)+miner_id);
             self.hash = self.calculate_hash();
+            itter+=1;
         }
+        println!("Miner {} has mined the block",miner_id);
+        self.clone()
     }
 //i am not sure why this is the way it is. fixed above
    /*  pub fn calculate_hash(&self)->String{
