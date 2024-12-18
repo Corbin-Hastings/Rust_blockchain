@@ -47,20 +47,20 @@ impl Block {
         self.nonce = (0+miner_id)as f64;
         let mut itter:i128 = 1;
         let prefix = "0".repeat(difficulty);//cite chatgpt
-        let mut done_val = done.lock().unwrap();
+        //let mut done_val = done.lock().unwrap();
         while !self.hash.starts_with(&prefix){
             //let done_val = done.lock().unwrap();
-            if *done_val==true {
+            if *done.lock().unwrap()==true {
                 return Option::None;
             }
             self.nonce = ((total_miners*itter)+miner_id) as f64;
             self.hash = self.calculate_hash();
             itter+=1;
-            println!("Miner {}  is on itter {}",miner_id,itter);
-            thread::sleep(time::Duration::from_secs(2));
+            //println!("Miner {}  is on itter {}",miner_id,itter);
+            //thread::sleep(time::Duration::from_secs(2));
         }
         println!("Miner {} has mined the block",miner_id);
-        *done_val = true;
+        *done.lock().unwrap() = true;
         Option::Some(self.clone())
     }
 //i am not sure why this is the way it is. fixed above

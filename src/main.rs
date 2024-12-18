@@ -1,9 +1,10 @@
 mod blockchain;
 mod miner;
 
-use std::{sync::Mutex, thread};
+use core::num;
+use std::{sync::{mpsc, Mutex}, thread, time};
 
-use blockchain::{block::Block, chain::Blockchain, transaction::{self, Transaction}};
+use blockchain::{block::Block, chain::{self, Blockchain}, transaction::{self, Transaction}};
 use miner::{mine_multi};
 use std::sync::Arc;
 
@@ -11,7 +12,7 @@ use std::sync::Arc;
 
 fn main() {
 
-    let mut start_chain = Arc::new(Mutex::new(Blockchain::new(5))); //creates chain at the begenning of program
+    let mut start_chain = Arc::new(Mutex::new(Blockchain::new(8))); //creates chain at the begenning of program
 
    
     //setting up test transactions
@@ -33,11 +34,11 @@ fn main() {
     chain.transaction_queue.get_mut().unwrap().push(&transaction4.clone()); */
 
     //init first block to hash out trasaction queue
-    let mut block = Arc::new(Mutex::new(Block::new(Vec::new(), 
-        "prev_hash".to_string(), 0)));
+    let mut block = Block::new(Vec::new(), 
+        "prev_hash".to_string(), 0);
     //push queue to the block to get calculated and recorded
     for i in start_chain.lock().unwrap().transaction_queue.clone() {
-        block.lock().unwrap().transactions.push(i);
+        block.transactions.push(i);
     }
     println!("chain before{:?}",start_chain);
     println!("block before mining: {:?}",block);
@@ -54,7 +55,7 @@ fn main() {
 
     ////////////////////////////////////////////////////////////////////////////////////////
     //mine_single(&mut block, diff);
-    let mut  num_threads = 4;
+    let mut  num_threads = 8;
 
     let mut handles = Vec::with_capacity(num_threads);
 
@@ -63,19 +64,44 @@ fn main() {
     for i in 0..num_threads {
         let done_clone = Arc::clone(&done);
         let chain_clone = Arc::clone(&start_chain);
-        let block_clone = Arc::clone(&block);
+        let mut block_clone = block.clone();
+
+        //let (tx, rx) = mpsc::channel();
+        
         let handle = thread::spawn(move || {
-            let bloc = &mut block_clone.lock().unwrap().clone();
+           let block = &mut block_clone;
+            let diff = chain_clone.lock().unwrap().difficulty;
           
             println!("miner {} starting",i);
-            let mined_block= mine_multi(bloc, chain_clone.lock().unwrap().difficulty, i as i128, num_threads as i128,done_clone);
+            let mined_block= mine_multi(block, diff, i as i128, num_threads as i128,done_clone);
             match mined_block {
-                Some(block)=>{chain_clone.lock().unwrap().chain.push(block);
+                Some(block)=>{
+                    chain_clone.lock().unwrap().chain.push(block);
                     println!("miner {} mined and retured the block",i);},
                 None=> {println!("Thread {} lost and is going to close",i);}
+            } 
+
+ /*            block_clone.lock().unwrap().nonce = (0+i)as f64;
+            let mut itter:i128 = 1;
+            let prefix = "0".repeat(chain_clone.lock().unwrap().difficulty);//cite chatgpt
+            let mut done_val = done_clone.lock().unwrap();
+            println!("broken ?");
+            while !block_clone.lock().unwrap().hash.starts_with(&prefix){
+                //let done_val = done.lock().unwrap();
+                if *done_val==true {
+                    return Option::None;
+                }
+                block_clone.lock().unwrap().nonce = (((num_threads as i128)*itter)+i)as f64;
+                block_clone.lock().unwrap().hash = block_clone.lock().unwrap().calculate_hash();
+                itter+=1;
+                println!("Miner {}  is on itter {}",i,itter);
+                thread::sleep(time::Duration::from_secs(2));
             }
+            println!("Miner {} has mined the block",i);
+            *done_val = true;
+            Option::Some(block_clone.lock().unwrap().clone())
             
-            
+             */
         });
 
         handles.push(handle);
